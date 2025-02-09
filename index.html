@@ -3,36 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft Server Uptime</title>
+    <title>Minecraft Server Status</title>
     <style>
-        body {
+        .statusbody {
             font-family: Arial, sans-serif;
+            
+            color: white;
+            margin: 0;
+            
+            padding: 20px;
+        }
+        .container {
+            max-width: 280px;
+            margin: auto;
+            background-color: #222;
+            padding: 20px;
+            border-radius: 10px;
+            
+        }
+        h1 {
             text-align: center;
-            margin: 50px;
+            font-size: 1em;
         }
-        #status {
-            font-size: 20px;
-            margin-top: 20px;
+        h2 {
+            font-size: 1em;
         }
+        .status {
+            font-size: 1.5em;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #444;
+            text-align: center;
+            color: white;
+            right: 20px;
+        }
+        .icon {
+            display: block;
+            margin: 20px auto;
+            width: 64px;
+            height: 64px;
+            display: none;
+        }
+        .players, .motd {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            display: none;
+        }
+        .player {
+            margin: 5px 0;
+            padding: 5px;
+            background-color: #555;
+            border-radius: 5px;
+            color: white;
+            display: none;
+        }
+        .iframe-container {
+    width: 320px;  /* Adjust width */
+    height: 190px; /* Adjust height */
+    overflow: hidden; /* Crops the iframe */
+    border-radius: 20px;
+    position: relative;
+    left: 10px;
+    
+}
+
+.iframe-container iframe {
+border-radius: 20px;
+    position: absolute;
+    top: -320px; /* Moves it up but keeps it cropped */
+    left: -18px;
+    width: 350px; /* Ensure iframe is large enough */
+    height: 510px;
+     
+     border: none;
+    
+}
+.motd {
+    display: none;
+}
+
     </style>
 </head>
 <body>
+    <div class="statusbody">
+    <div class="container">
+        <h1>FALTU LIFESTEAL</h1>
+        <div class="status" id="status">Status: Loading...</div>
+        <h2>REFRESH PAGE TO REFRESH STATUS</h2>
+     </div>
+        <img class="icon" id="icon" src="" alt="Server Icon" />
+        
+        <div class="players">
+            <p id="playerCount">Players Online: Loading...</p>
+            <p id="maxPlayers">Max Players: Loading...</p>
+        </div>
+        <div class="motd" id="motd">MOTD: Loading...</div>
+        <br> <br> <br> <br><br><br><br>
+    
+    <div class="iframe-container">
+<iframe src="https://faltu-smp.betteruptime.com" width="350" height="600"></iframe>
 
-    <h1>Minecraft Server Uptime & Downtime</h1>
-    <p id="status">Fetching data...</p>
+</div>
+  <div class="container">
+<div class="status" id="mcsrvstat-status">Status: Loading...</div>
+<h2>REFRESH PAGE TO REFRESH STATUS</h2>
+</div>
+</div>
+
+ <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const statusElement = document.getElementById('mcsrvstat-status');
+    const serverAddress = 'survival.faltusmp.fun:25599';
+
+    fetch(`https://api.mcsrvstat.us/2/${serverAddress}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.online) {
+        statusElement.textContent = 'Status: Online';
+        statusElement.style.backgroundColor = 'green';
+      } else {
+        statusElement.textContent = 'Status: Offline';
+        statusElement.style.backgroundColor = 'red';
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching server status:', error);
+      statusElement.textContent = 'Status: Error fetching data';
+      statusElement.style.backgroundColor = 'gray';
+    });
+  });
+</script>
+
+
+</script>
 
     <script>
-        fetch("https://api.mcstatistics.org/servers/67a755c8c43e596d602ff2b8/status", {
-    method: "GET",
-    headers: {
-        "X-MCStatistics-Secret": "abZf9AcTv3cb5w7NkK96BMvwYygV67WelE38FbSvms"
+        async function fetchServerStatus() {
+    try {
+        const response = await fetch('https://api.mcstatus.io/v2/status/java/FaltusmpLF.aternos.me:27772');
+        const data = await response.json();
+const motd = data.motd.clean || data.motd.raw || "";
+        const statusDiv = document.getElementById('status');
+        const motdDiv = document.getElementById('motd');
+        const playerCountDiv = document.getElementById('playerCount');
+        const maxPlayersDiv = document.getElementById('maxPlayers');
+        const iconDiv = document.getElementById('icon');
+
+        // Check if the server is online
+        if (data.online) {
+            statusDiv.innerText = 'Status: Offline';
+            statusDiv.style.backgroundColor = 'red';
+
+            // Update server icon
+            if (data.icon) {
+                iconDiv.src = data.icon;
+            }
+            if (motd.toLowerCase().includes("online")) {
+            statusDiv.innerText = 'Status: Online';
+            statusDiv.style.backgroundColor = 'green';
+        } else if (motd.toLowerCase().includes("offline")) {
+            statusDiv.innerText = 'Status: Offline';
+            statusDiv.style.backgroundColor = 'red';
+        } else {
+            // If MOTD doesn't contain "Online" or "Offline", fall back to API data
+            if (data && data.online) {
+                statusDiv.innerText = 'Status: Online';
+                statusDiv.style.backgroundColor = 'green';
+            } else {
+                statusDiv.innerText = 'Status: Offline';
+                statusDiv.style.backgroundColor = 'red';
+            }
+        }
+
+            // Update player counts
+            const playerCount = data.players.online || 0;
+            const maxPlayers = data.players.max || 0;
+            playerCountDiv.innerText = `Players Online: ${playerCount}`;
+            maxPlayersDiv.innerText = `Max Players: ${maxPlayers}`;
+
+            // Update MOTD
+            
+            if (data.motd && data.motd.clean) {
+                motdDiv.innerText = `MOTD: ${data.motd.clean}`;
+            } else {
+                motdDiv.innerText = 'MOTD: Not available';
+            }
+        } else {
+            // If server is offline
+            statusDiv.innerText = 'Status: Offline';
+            statusDiv.style.backgroundColor = 'red';
+            motdDiv.innerText = 'MOTD: SERVER IS OFFLINE';
+            playerCountDiv.innerText = 'Players Online: 0';
+            maxPlayersDiv.innerText = 'Max Players: 0';
+            iconDiv.src = ''; // Remove the icon if offline
+        }
+    } 
+    
+        catch (error) {
+        console.error('Error fetching server status:', error);
+
+        // Handle error by setting the server as offline
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerText = 'Status: Error fetching server status';
+        statusDiv.style.backgroundColor = 'red';
+
+        document.getElementById('motd').innerText = 'MOTD: SERVER IS OFFLINE';
+        document.getElementById('playerCount').innerText = 'Players Online: 0';
+        document.getElementById('maxPlayers').innerText = 'Max Players: 0';
+        document.getElementById('icon').src = '';
     }
-})
-.then(response => response.json())
-.then(data => console.log(data))
-.catch(error => console.error("Error:", error));
+}
 
+window.onload = fetchServerStatus;
+
+
+        
     </script>
-
 </body>
 </html>
